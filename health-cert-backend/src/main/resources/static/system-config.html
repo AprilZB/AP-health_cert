@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 系统配置</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏（复用样式） */
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-header h1 {
+            display: none;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .nav-menu {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-item-icon {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .nav-item-icon {
+            margin-right: 0;
+        }
+
+        .nav-item-text {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .nav-item-text {
+            display: none;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 60px;
+        }
+
+        /* 顶部栏 */
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 30px;
+        }
+
+        /* 配置卡片 */
+        .config-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .config-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* 按钮样式 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-test {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-test:hover {
+            background: #229954;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 消息提示 */
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar:not(.collapsed) {
+                width: 250px;
+            }
+
+            .main-content {
+                margin-left: 60px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>健康证管理系统</h1>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item" onclick="navigate('admin-dashboard.html')">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-text">工作台</span>
+            </div>
+            <div class="nav-item" onclick="navigate('cert-audit.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">健康证管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('employee-management.html')">
+                <span class="nav-item-icon">👥</span>
+                <span class="nav-item-text">员工管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('department-management.html')">
+                <span class="nav-item-icon">🏢</span>
+                <span class="nav-item-text">部门管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('operation-logs.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">操作日志</span>
+            </div>
+            <div class="nav-item active" onclick="navigate('system-config.html')">
+                <span class="nav-item-icon">⚙️</span>
+                <span class="nav-item-text">系统配置</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="topbar">
+            <h2>系统配置</h2>
+            <div class="user-info">
+                <span class="user-name" id="userName">加载中...</span>
+                <button class="logout-btn" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content">
+            <!-- 邮件配置 -->
+            <div class="config-card">
+                <h3>邮件配置</h3>
+                <div class="message" id="emailMessage"></div>
+                <form id="emailForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SMTP服务器地址</label>
+                            <input type="text" id="emailSmtpHost" placeholder="例如：smtp.example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP端口</label>
+                            <input type="text" id="emailSmtpPort" placeholder="例如：25">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SMTP用户名</label>
+                            <input type="text" id="emailUsername" placeholder="请输入用户名">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP密码</label>
+                            <input type="password" id="emailPassword" placeholder="请输入密码">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>发件人邮箱</label>
+                        <input type="email" id="emailFrom" placeholder="例如：noreply@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>邮件主题模板</label>
+                        <input type="text" id="emailSubjectTemplate" placeholder="支持变量：{name}, {certNumber}, {expiryDate}">
+                    </div>
+                    <div class="form-group">
+                        <label>邮件内容模板</label>
+                        <input type="text" id="emailContentTemplate" placeholder="支持变量：{name}, {certNumber}, {expiryDate}">
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="saveEmailConfig()">保存配置</button>
+                        <button type="button" class="btn btn-test" onclick="testEmail()">测试邮件</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 钉钉配置 -->
+            <div class="config-card">
+                <h3>钉钉配置</h3>
+                <div class="message" id="dingtalkMessage"></div>
+                <form id="dingtalkForm">
+                    <div class="form-group">
+                        <label>企业ID</label>
+                        <input type="text" id="dingtalkCorpId" placeholder="请输入钉钉企业ID">
+                    </div>
+                    <div class="form-group">
+                        <label>应用密钥</label>
+                        <input type="text" id="dingtalkAppSecret" placeholder="请输入应用密钥">
+                    </div>
+                    <div class="form-group">
+                        <label>应用Key</label>
+                        <input type="text" id="dingtalkAppKey" placeholder="请输入应用Key">
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="saveDingTalkConfig()">保存配置</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 数据同步配置 -->
+            <div class="config-card">
+                <h3>数据同步</h3>
+                <div class="message" id="syncMessage"></div>
+                <div class="form-group">
+                    <p style="color: #666; margin-bottom: 15px; line-height: 1.6;">
+                        手动触发员工和部门数据同步，从远程数据库同步最新的员工和部门信息到本地数据库。
+                        <br>注意：同步过程可能需要几分钟时间，请耐心等待。
+                    </p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" id="syncBtn" onclick="triggerSync()">立即同步</button>
+                </div>
+                <div id="syncResult" style="margin-top: 20px; display: none;">
+                    <h4 style="font-size: 14px; color: #333; margin-bottom: 10px;">同步结果：</h4>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.8;">
+                        <div>新增员工：<span id="syncAddedCount">-</span> 人</div>
+                        <div>更新员工：<span id="syncUpdatedCount">-</span> 人</div>
+                        <div>离职员工：<span id="syncInactiveCount">-</span> 人</div>
+                        <div>开始时间：<span id="syncStartTime">-</span></div>
+                        <div>结束时间：<span id="syncEndTime">-</span></div>
+                        <div>耗时：<span id="syncDuration">-</span> 毫秒</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提醒规则配置 -->
+            <div class="config-card">
+                <h3>提醒规则配置</h3>
+                <div class="message" id="reminderMessage"></div>
+                <form id="reminderForm">
+                    <div class="form-group">
+                        <label>提醒天数</label>
+                        <input type="text" id="reminderDays" placeholder="例如：30,15,7,3,1（逗号分隔）">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <span>启用邮件提醒</span>
+                            <label class="switch">
+                                <input type="checkbox" id="reminderEmailEnabled">
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <span>启用钉钉提醒</span>
+                            <label class="switch">
+                                <input type="checkbox" id="reminderDingtalkEnabled">
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="saveReminderConfig()">保存配置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础地址
+        const API_BASE_URL = '/api';
+
+        /**
+         * 获取Token
+         */
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        /**
+         * 检查登录状态
+         */
+        function checkLogin() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 切换侧边栏
+         */
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        /**
+         * 导航到指定页面
+         */
+        function navigate(url) {
+            window.location.href = url;
+        }
+
+        /**
+         * 退出登录
+         */
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        /**
+         * 显示用户信息
+         */
+        function displayUserInfo() {
+            const username = localStorage.getItem('username') || '管理员';
+            document.getElementById('userName').textContent = username;
+        }
+
+        /**
+         * 显示消息
+         */
+        function showMessage(elementId, message, isSuccess) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = 'message show ' + (isSuccess ? 'success' : 'error');
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+
+        /**
+         * 加载邮件配置
+         */
+        async function loadEmailConfig() {
+            try {
+                const response = await fetch(API_BASE_URL + '/admin/config/email', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const config = result.data || {};
+                    document.getElementById('emailSmtpHost').value = config.smtpHost || '';
+                    document.getElementById('emailSmtpPort').value = config.smtpPort || '';
+                    document.getElementById('emailUsername').value = config.username || '';
+                    document.getElementById('emailPassword').value = config.password || '';
+                    document.getElementById('emailFrom').value = config.from || '';
+                    document.getElementById('emailSubjectTemplate').value = config.subjectTemplate || '';
+                    document.getElementById('emailContentTemplate').value = config.contentTemplate || '';
+                }
+            } catch (error) {
+                console.error('加载邮件配置失败:', error);
+            }
+        }
+
+        /**
+         * 保存邮件配置
+         */
+        async function saveEmailConfig() {
+            try {
+                const config = {
+                    smtpHost: document.getElementById('emailSmtpHost').value.trim(),
+                    smtpPort: document.getElementById('emailSmtpPort').value.trim(),
+                    username: document.getElementById('emailUsername').value.trim(),
+                    password: document.getElementById('emailPassword').value.trim(),
+                    from: document.getElementById('emailFrom').value.trim(),
+                    subjectTemplate: document.getElementById('emailSubjectTemplate').value.trim(),
+                    contentTemplate: document.getElementById('emailContentTemplate').value.trim()
+                };
+
+                const response = await fetch(API_BASE_URL + '/admin/config/email', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showMessage('emailMessage', '邮件配置保存成功', true);
+                } else {
+                    showMessage('emailMessage', result.message || '保存失败', false);
+                }
+            } catch (error) {
+                console.error('保存邮件配置失败:', error);
+                showMessage('emailMessage', '网络错误，请稍后重试', false);
+            }
+        }
+
+        /**
+         * 测试邮件
+         */
+        async function testEmail() {
+            const toEmail = prompt('请输入测试邮箱地址：');
+            if (!toEmail) {
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE_URL + '/admin/config/email/test?toEmail=' + encodeURIComponent(toEmail), {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showMessage('emailMessage', '测试邮件发送成功，请查收', true);
+                } else {
+                    showMessage('emailMessage', result.message || '测试邮件发送失败', false);
+                }
+            } catch (error) {
+                console.error('测试邮件失败:', error);
+                showMessage('emailMessage', '网络错误，请稍后重试', false);
+            }
+        }
+
+        /**
+         * 加载钉钉配置
+         */
+        async function loadDingTalkConfig() {
+            try {
+                const response = await fetch(API_BASE_URL + '/admin/config/dingtalk', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const config = result.data || {};
+                    document.getElementById('dingtalkCorpId').value = config.corpId || '';
+                    document.getElementById('dingtalkAppSecret').value = config.appSecret || '';
+                    document.getElementById('dingtalkAppKey').value = config.appKey || '';
+                }
+            } catch (error) {
+                console.error('加载钉钉配置失败:', error);
+            }
+        }
+
+        /**
+         * 保存钉钉配置
+         */
+        async function saveDingTalkConfig() {
+            try {
+                const config = {
+                    corpId: document.getElementById('dingtalkCorpId').value.trim(),
+                    appSecret: document.getElementById('dingtalkAppSecret').value.trim(),
+                    appKey: document.getElementById('dingtalkAppKey').value.trim()
+                };
+
+                const response = await fetch(API_BASE_URL + '/admin/config/dingtalk', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showMessage('dingtalkMessage', '钉钉配置保存成功', true);
+                } else {
+                    showMessage('dingtalkMessage', result.message || '保存失败', false);
+                }
+            } catch (error) {
+                console.error('保存钉钉配置失败:', error);
+                showMessage('dingtalkMessage', '网络错误，请稍后重试', false);
+            }
+        }
+
+        /**
+         * 加载提醒规则配置
+         */
+        async function loadReminderConfig() {
+            try {
+                const response = await fetch(API_BASE_URL + '/admin/config/reminder', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const config = result.data || {};
+                    document.getElementById('reminderDays').value = config.reminderDays || '';
+                    document.getElementById('reminderEmailEnabled').checked = config.emailEnabled || false;
+                    document.getElementById('reminderDingtalkEnabled').checked = config.dingtalkEnabled || false;
+                }
+            } catch (error) {
+                console.error('加载提醒规则配置失败:', error);
+            }
+        }
+
+        /**
+         * 保存提醒规则配置
+         */
+        async function saveReminderConfig() {
+            try {
+                const config = {
+                    reminderDays: document.getElementById('reminderDays').value.trim(),
+                    emailEnabled: document.getElementById('reminderEmailEnabled').checked,
+                    dingtalkEnabled: document.getElementById('reminderDingtalkEnabled').checked
+                };
+
+                const response = await fetch(API_BASE_URL + '/admin/config/reminder', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showMessage('reminderMessage', '提醒规则配置保存成功', true);
+                } else {
+                    showMessage('reminderMessage', result.message || '保存失败', false);
+                }
+            } catch (error) {
+                console.error('保存提醒规则配置失败:', error);
+                showMessage('reminderMessage', '网络错误，请稍后重试', false);
+            }
+        }
+
+        /**
+         * 手动触发数据同步
+         */
+        async function triggerSync() {
+            const syncBtn = document.getElementById('syncBtn');
+            const syncResult = document.getElementById('syncResult');
+            
+            // 禁用按钮，显示加载状态
+            syncBtn.disabled = true;
+            syncBtn.textContent = '同步中...';
+            syncResult.style.display = 'none';
+            
+            // 清除之前的消息
+            const messageEl = document.getElementById('syncMessage');
+            messageEl.className = 'message';
+            messageEl.textContent = '';
+
+            try {
+                const response = await fetch(API_BASE_URL + '/admin/config/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    // 显示成功消息
+                    showMessage('syncMessage', '数据同步成功！', true);
+                    
+                    // 显示同步结果
+                    const data = result.data || {};
+                    document.getElementById('syncAddedCount').textContent = data.addedCount || 0;
+                    document.getElementById('syncUpdatedCount').textContent = data.updatedCount || 0;
+                    document.getElementById('syncInactiveCount').textContent = data.inactiveCount || 0;
+                    document.getElementById('syncStartTime').textContent = data.startTime || '-';
+                    document.getElementById('syncEndTime').textContent = data.endTime || '-';
+                    document.getElementById('syncDuration').textContent = data.duration || 0;
+                    syncResult.style.display = 'block';
+                } else {
+                    showMessage('syncMessage', result.message || '同步失败', false);
+                }
+            } catch (error) {
+                console.error('触发同步失败:', error);
+                showMessage('syncMessage', '网络错误，请稍后重试', false);
+            } finally {
+                // 恢复按钮状态
+                syncBtn.disabled = false;
+                syncBtn.textContent = '立即同步';
+            }
+        }
+
+        /**
+         * 页面初始化
+         */
+        function init() {
+            if (!checkLogin()) {
+                return;
+            }
+
+            displayUserInfo();
+            loadEmailConfig();
+            loadDingTalkConfig();
+            loadReminderConfig();
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

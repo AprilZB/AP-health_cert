@@ -1,0 +1,47 @@
+# 员工健康证管理系统 - 应用配置文件
+
+# 服务器配置
+server:
+  port: 8080
+
+# Spring配置
+spring:
+  # 数据源配置
+  datasource:
+    # MySQL驱动类
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据库连接URL（使用UTF-8字符集，确保中文正确显示）
+    url: jdbc:mysql://localhost:3306/health_cert_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    # 数据库用户名
+    username: root
+    # 数据库密码
+    password: root123
+  # SQL初始化配置（Spring Boot 2.5+）
+  sql:
+    init:
+      # 初始化模式：always=总是执行, embedded=仅嵌入式数据库, never=不执行
+      mode: always
+      # 表结构SQL脚本位置
+      schema-locations: classpath:sql/schema.sql
+      # 初始数据SQL脚本位置
+      data-locations: classpath:sql/data.sql
+      # 继续执行即使发生错误（用于处理重复执行的情况，如表已存在）
+      continue-on-error: true
+
+# MyBatis-Plus配置
+mybatis-plus:
+  # Mapper XML文件位置
+  mapper-locations: classpath:mapper/*.xml
+  # 实体类包路径（用于类型别名）
+  type-aliases-package: com.microport.healthcert.entity
+  # MyBatis配置
+  configuration:
+    # 开启驼峰命名转换（数据库下划线转Java驼峰）
+    map-underscore-to-camel-case: true
+
+# JWT配置
+jwt:
+  # JWT密钥（至少64个字符，满足HS512算法的512位要求）
+  secret: microport-health-cert-secret-key-2024-for-employee-health-certificate-management-system-secure
+  # Token过期时间（毫秒），86400000 = 24小时
+  expiration: 86400000

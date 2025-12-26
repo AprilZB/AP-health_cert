@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 我的健康证</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 80px; /* 为底部按钮留出空间 */
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header .user-info {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        /* 当前健康证状态卡片 */
+        .status-card {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-card h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.expired {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-badge.draft {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .cert-info {
+            margin-top: 15px;
+        }
+
+        .cert-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .cert-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .cert-info-label {
+            color: #666;
+        }
+
+        .cert-info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 操作按钮区域 */
+        .action-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .upload-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-button:active {
+            transform: translateY(0);
+        }
+
+        /* 历史记录列表 */
+        .history-section {
+            margin: 20px;
+        }
+
+        .history-section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .history-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item:hover {
+            background: #f9f9f9;
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-item-title {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .history-item-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .history-item-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 错误提示 */
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 响应式设计 - 移动端适配 */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .status-card,
+            .history-section {
+                margin: 15px;
+            }
+
+            .upload-button {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            .cert-info-item {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <h1>我的健康证</h1>
+        <div class="user-info" id="userInfo">加载中...</div>
+    </div>
+
+    <!-- 当前健康证状态 -->
+    <div class="status-card" id="statusCard">
+        <h2>当前健康证状态</h2>
+        <div id="statusContent">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 10px;">加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="history-section">
+        <h2>历史记录</h2>
+        <div class="history-list" id="historyList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- 底部操作按钮 -->
+    <div class="action-section">
+        <button class="upload-button" onclick="goToUpload()">
+            上传健康证
+        </button>
+    </div>
+
+    <script>
+        // API基础地址
+        const API_BASE_URL = '/api';
+
+        /**
+         * 获取当前用户信息
+         */
+        function getUserInfo() {
+            const username = localStorage.getItem('username') || '未知用户';
+            const userInfoEl = document.getElementById('userInfo');
+            userInfoEl.textContent = `欢迎，${username}`;
+        }
+
+        /**
+         * 获取Token
+         */
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        /**
+         * 检查登录状态
+         */
+        function checkLogin() {
+            const token = getToken();
+            if (!token) {
+                // 未登录，跳转到登录页
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 显示错误消息
+         */
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 3000);
+        }
+
+        /**
+         * 获取状态文本
+         */
+        function getStatusText(status) {
+            const statusMap = {
+                'draft': '草稿',
+                'pending': '待审核',
+                'approved': '已通过',
+                'rejected': '已拒绝',
+                'expired': '已过期'
+            };
+            return statusMap[status] || status;
+        }
+
+        /**
+         * 获取状态样式类
+         */
+        function getStatusClass(status) {
+            return status || 'draft';
+        }
+
+        /**
+         * 格式化日期
+         */
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        /**
+         * 加载当前健康证状态
+         */
+        async function loadCurrentStatus() {
+            const statusContent = document.getElementById('statusContent');
+            
+            try {
+                const response = await fetch(API_BASE_URL + '/health-cert/my-list', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const certificates = result.data || [];
+                    
+                    // 查找当前有效的健康证（is_current=1）
+                    const currentCert = certificates.find(cert => cert.isCurrent === 1) || certificates[0];
+
+                    if (currentCert) {
+                        // 显示当前健康证信息
+                        const status = currentCert.status || 'draft';
+                        statusContent.innerHTML = `
+                            <span class="status-badge ${getStatusClass(status)}">${getStatusText(status)}</span>
+                            <div class="cert-info">
+                                <div class="cert-info-item">
+                                    <span class="cert-info-label">健康证编号：</span>
+                                    <span class="cert-info-value">${currentCert.certNumber || '-'}</span>
+                                </div>
+                                <div class="cert-info-item">
+                                    <span class="cert-info-label">发证日期：</span>
+                                    <span class="cert-info-value">${formatDate(currentCert.issueDate)}</span>
+                                </div>
+                                <div class="cert-info-item">
+                                    <span class="cert-info-label">有效期至：</span>
+                                    <span class="cert-info-value">${formatDate(currentCert.expiryDate)}</span>
+                                </div>
+                                <div class="cert-info-item">
+                                    <span class="cert-info-label">发证机构：</span>
+                                    <span class="cert-info-value">${currentCert.issuingAuthority || '-'}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // 没有健康证
+                        statusContent.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📄</div>
+                                <div class="empty-state-text">暂无健康证记录</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    showError(result.message || '加载失败');
+                    statusContent.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-text">加载失败</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载当前状态失败:', error);
+                showError('网络错误，请稍后重试');
+                statusContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-text">加载失败</div>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 加载历史记录
+         */
+        async function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            try {
+                const response = await fetch(API_BASE_URL + '/health-cert/my-list', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const certificates = result.data || [];
+                    
+                    if (certificates.length === 0) {
+                        historyList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-text">暂无历史记录</div>
+                            </div>
+                        `;
+                    } else {
+                        // 显示历史记录列表
+                        historyList.innerHTML = certificates.map(cert => {
+                            const status = cert.status || 'draft';
+                            const submitTime = cert.submitTime ? new Date(cert.submitTime).toLocaleString('zh-CN') : '-';
+                            return `
+                                <div class="history-item">
+                                    <div class="history-item-header">
+                                        <span class="history-item-title">${cert.certNumber || '未编号'}</span>
+                                        <span class="status-badge ${getStatusClass(status)}">${getStatusText(status)}</span>
+                                    </div>
+                                    <div class="history-item-info">
+                                        <div>提交时间：${submitTime}</div>
+                                        <div>有效期至：${formatDate(cert.expiryDate)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    showError(result.message || '加载失败');
+                    historyList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-text">加载失败</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+                showError('网络错误，请稍后重试');
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-text">加载失败</div>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 跳转到上传页面
+         */
+        function goToUpload() {
+            window.location.href = 'upload-certificate.html';
+        }
+
+        /**
+         * 页面初始化
+         */
+        function init() {
+            // 检查登录状态
+            if (!checkLogin()) {
+                return;
+            }
+
+            // 显示用户信息
+            getUserInfo();
+
+            // 加载数据
+            loadCurrentStatus();
+            loadHistory();
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 健康证管理</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏（复用样式） */
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-header h1 {
+            display: none;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .nav-menu {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-item-icon {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .nav-item-icon {
+            margin-right: 0;
+        }
+
+        .nav-item-text {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .nav-item-text {
+            display: none;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 60px;
+        }
+
+        /* 顶部栏 */
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 30px;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-item label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .filter-item input,
+        .filter-item select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-item select {
+            min-width: 120px;
+            cursor: pointer;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            background: #5568d3;
+        }
+
+        /* 列表卡片 */
+        .list-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .list-table th,
+        .list-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .list-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .list-table td {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .list-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.expired {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-badge.draft {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .action-btn.audit {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.audit:hover {
+            background: #5568d3;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* 模态框主体布局：左右两列 */
+        .modal-body-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* 左侧信息区域 */
+        .modal-info-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 右侧图片预览区域 */
+        .modal-image-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .modal-image-container {
+            width: 100%;
+            max-width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f9f9f9;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-image-container:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .modal-image-container:hover .fullscreen-hint {
+            opacity: 1;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .fullscreen-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .modal-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .modal-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-info-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .modal-info-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .modal-actions {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-btn.approve {
+            background: #27ae60;
+            color: white;
+        }
+
+        .modal-btn.approve:hover {
+            background: #229954;
+        }
+
+        .modal-btn.reject {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .modal-btn.reject:hover {
+            background: #c0392b;
+        }
+
+        .modal-btn.cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .reject-reason {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* 分页 */
+        .pagination {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar:not(.collapsed) {
+                width: 250px;
+            }
+
+            .main-content {
+                margin-left: 60px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .list-table {
+                font-size: 12px;
+            }
+
+            .list-table th,
+            .list-table td {
+                padding: 10px;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+
+            .modal-info {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-body-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 全屏预览样式 */
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-image {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 36px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>健康证管理系统</h1>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item" onclick="navigate('admin-dashboard.html')">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-text">工作台</span>
+            </div>
+            <div class="nav-item active" onclick="navigate('cert-audit.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">健康证管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('employee-management.html')">
+                <span class="nav-item-icon">👥</span>
+                <span class="nav-item-text">员工管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('department-management.html')">
+                <span class="nav-item-icon">🏢</span>
+                <span class="nav-item-text">部门管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('operation-logs.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">操作日志</span>
+            </div>
+            <div class="nav-item" onclick="navigate('system-config.html')">
+                <span class="nav-item-icon">⚙️</span>
+                <span class="nav-item-text">系统配置</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="topbar">
+            <h2>健康证管理</h2>
+            <div class="user-info">
+                <span class="user-name" id="userName">加载中...</span>
+                <button class="logout-btn" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content">
+            <!-- 筛选栏 -->
+            <div class="filter-bar">
+                <div class="filter-item">
+                    <label>状态：</label>
+                    <select id="filterStatus">
+                        <option value="">全部</option>
+                        <option value="pending">待审核</option>
+                        <option value="approved">已通过</option>
+                        <option value="rejected">已拒绝</option>
+                        <option value="expired">已过期</option>
+                        <option value="draft">草稿</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>员工姓名：</label>
+                    <input type="text" id="filterEmployeeName" placeholder="请输入员工姓名">
+                </div>
+                <div class="filter-item">
+                    <label>健康证编号：</label>
+                    <input type="text" id="filterCertNumber" placeholder="请输入编号">
+                </div>
+                <button class="filter-btn" onclick="loadHealthCertList()">查询</button>
+            </div>
+
+            <!-- 健康证列表 -->
+            <div class="list-card">
+                <div class="list-header">
+                    <h3>健康证列表</h3>
+                </div>
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>员工姓名</th>
+                            <th>健康证编号</th>
+                            <th>状态</th>
+                            <th>发证日期</th>
+                            <th>有效期至</th>
+                            <th>提交时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="healthCertListBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- 分页 -->
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 审核/查看模态框 -->
+    <div class="modal" id="auditModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">审核健康证</h3>
+                <button class="modal-close" onclick="closeAuditModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 动态填充内容 -->
+            </div>
+            <div class="modal-actions" id="modalActions">
+                <button class="modal-btn approve" id="approveBtn" onclick="approveCertificate()" style="display: none;">通过</button>
+                <button class="modal-btn reject" id="rejectBtn" onclick="showRejectReason()" style="display: none;">拒绝</button>
+                <button class="modal-btn cancel" onclick="closeAuditModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全屏图片预览 -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
+        <button class="fullscreen-close" onclick="closeFullscreen()">×</button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="健康证图片" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        // API基础地址
+        const API_BASE_URL = '/api';
+
+        // 当前页码和每页大小
+        let currentPage = 1;
+        const pageSize = 10;
+        let totalPages = 1;
+
+        // 当前审核的健康证ID
+        let currentAuditCertId = null;
+        let currentViewCertId = null;
+        let isRejectMode = false;
+        let isViewMode = false; // 是否为查看模式（非审核模式）
+
+        /**
+         * 获取Token
+         */
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        /**
+         * 检查登录状态
+         */
+        function checkLogin() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 切换侧边栏
+         */
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        /**
+         * 导航到指定页面
+         */
+        function navigate(url) {
+            window.location.href = url;
+        }
+
+        /**
+         * 退出登录
+         */
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        /**
+         * 显示用户信息
+         */
+        function displayUserInfo() {
+            const username = localStorage.getItem('username') || '管理员';
+            document.getElementById('userName').textContent = username;
+        }
+
+        /**
+         * 格式化日期
+         */
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        /**
+         * 格式化日期时间
+         */
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        /**
+         * 获取状态文本
+         */
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待审核',
+                'approved': '已通过',
+                'rejected': '已拒绝',
+                'expired': '已过期',
+                'draft': '草稿'
+            };
+            return statusMap[status] || status || '-';
+        }
+
+        /**
+         * 获取状态样式类
+         */
+        function getStatusClass(status) {
+            return status ? `status-badge ${status}` : '';
+        }
+
+        /**
+         * 加载健康证列表
+         */
+        async function loadHealthCertList(page = 1) {
+            currentPage = page;
+            const tbody = document.getElementById('healthCertListBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #999;">加载中...</td></tr>';
+
+            try {
+                // 获取筛选条件
+                const status = document.getElementById('filterStatus').value.trim();
+                const employeeName = document.getElementById('filterEmployeeName').value.trim();
+                const certNumber = document.getElementById('filterCertNumber').value.trim();
+
+                // 构建查询参数
+                let url = `${API_BASE_URL}/admin/health-cert/list?page=${page}&size=${pageSize}`;
+                if (status) {
+                    url += `&status=${encodeURIComponent(status)}`;
+                }
+                if (employeeName) {
+                    url += `&employeeName=${encodeURIComponent(employeeName)}`;
+                }
+                if (certNumber) {
+                    url += `&certNumber=${encodeURIComponent(certNumber)}`;
+                }
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const pageData = result.data || {};
+                    const records = pageData.records || [];
+                    totalPages = pageData.pages || 1;
+
+                    if (records.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #999;">暂无健康证记录</td></tr>';
+                    } else {
+                        tbody.innerHTML = records.map(cert => {
+                            const statusText = getStatusText(cert.status);
+                            const statusClass = getStatusClass(cert.status);
+                            const actionBtn = cert.status === 'pending' 
+                                ? `<button class="action-btn audit" onclick="openAuditModal(${cert.id})">审核</button>`
+                                : `<button class="action-btn audit" onclick="openViewModal(${cert.id})">查看</button>`;
+                            
+                            return `
+                                <tr>
+                                    <td>${cert.id || '-'}</td>
+                                    <td>${cert.employeeName || '-'}</td>
+                                    <td>${cert.certNumber || '-'}</td>
+                                    <td><span class="${statusClass}">${statusText}</span></td>
+                                    <td>${formatDate(cert.issueDate)}</td>
+                                    <td>${formatDate(cert.expiryDate)}</td>
+                                    <td>${formatDateTime(cert.submitTime)}</td>
+                                    <td>${actionBtn}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+
+                    // 更新分页
+                    updatePagination();
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #c33;">加载失败：' + (result.message || '未知错误') + '</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载健康证列表失败:', error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #c33;">网络错误，请稍后重试</td></tr>';
+            }
+        }
+
+        /**
+         * 更新分页
+         */
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            // 上一页按钮
+            html += `<button class="page-btn" onclick="loadHealthCertList(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="loadHealthCertList(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span style="padding: 8px;">...</span>`;
+                }
+            }
+
+            // 下一页按钮
+            html += `<button class="page-btn" onclick="loadHealthCertList(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+
+            pagination.innerHTML = html;
+        }
+
+        /**
+         * 打开审核模态框
+         */
+        async function openAuditModal(certId) {
+            currentAuditCertId = certId;
+            isRejectMode = false;
+            // 如果isViewMode未设置，根据certId判断（如果是从openViewModal调用，isViewMode应该已经设置为true）
+            // 否则默认为false（审核模式）
+
+            try {
+                // 获取健康证详情（从列表中查找或重新查询）
+                const listResponse = await fetch(`${API_BASE_URL}/admin/health-cert/list?page=1&size=1000`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!listResponse.ok) {
+                    const errorResult = await listResponse.json();
+                    throw new Error(errorResult.message || '获取健康证列表失败');
+                }
+
+                const listResult = await listResponse.json();
+
+                if (listResult.code !== 200) {
+                    throw new Error(listResult.message || '获取健康证列表失败');
+                }
+
+                const cert = (listResult.data?.records || []).find(c => c.id === certId);
+
+                if (!cert) {
+                    alert('未找到健康证信息');
+                    return;
+                }
+
+                // 根据状态决定是否需要锁定（只有待审核状态且非查看模式才需要锁定）
+                // 如果isViewMode未定义，则根据状态判断：非pending状态默认为查看模式
+                if (isViewMode === undefined) {
+                    isViewMode = cert.status !== 'pending';
+                }
+
+                if (!isViewMode && cert.status === 'pending') {
+                    const lockResponse = await fetch(`${API_BASE_URL}/admin/health-cert/lock/${certId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + getToken(),
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!lockResponse.ok) {
+                        const lockResult = await lockResponse.json();
+                        alert(lockResult.message || '锁定失败，该健康证可能已被其他管理员锁定');
+                        return;
+                    }
+                }
+
+                // 显示模态框
+                const modalBody = document.getElementById('modalBody');
+                // 构建图片URL：如果imagePath是相对路径（如 2024/12/uuid.jpg），需要加上 /uploads/ 前缀
+                let imageUrl = '';
+                if (cert.imagePath) {
+                    console.log('原始imagePath:', cert.imagePath);
+                    if (cert.imagePath.startsWith('http')) {
+                        // 已经是完整URL
+                        imageUrl = cert.imagePath;
+                    } else if (cert.imagePath.startsWith('/')) {
+                        // 已经是绝对路径
+                        imageUrl = cert.imagePath;
+                    } else {
+                        // 相对路径，需要加上 /uploads/ 前缀
+                        // 统一使用正斜杠，并确保路径格式正确
+                        const normalizedPath = cert.imagePath.replace(/\\/g, '/');
+                        imageUrl = '/uploads/' + normalizedPath;
+                    }
+                    console.log('构建的imageUrl:', imageUrl);
+                } else {
+                    console.warn('cert.imagePath为空');
+                }
+
+                modalBody.innerHTML = `
+                    <div class="modal-body-layout">
+                        <!-- 左侧：健康证信息 -->
+                        <div class="modal-info-section">
+                            <div class="modal-info">
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">健康证编号</div>
+                                    <div class="modal-info-value">${cert.certNumber || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">员工姓名</div>
+                                    <div class="modal-info-value">${cert.employeeName || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">性别</div>
+                                    <div class="modal-info-value">${cert.gender || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">年龄</div>
+                                    <div class="modal-info-value">${cert.age || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">身份证号</div>
+                                    <div class="modal-info-value">${cert.idCard || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">健康证类别</div>
+                                    <div class="modal-info-value">${cert.category || '-'}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">发证日期</div>
+                                    <div class="modal-info-value">${formatDate(cert.issueDate)}</div>
+                                </div>
+                                <div class="modal-info-item">
+                                    <div class="modal-info-label">有效期至</div>
+                                    <div class="modal-info-value">${formatDate(cert.expiryDate)}</div>
+                                </div>
+                                <div class="modal-info-item" style="grid-column: 1 / -1;">
+                                    <div class="modal-info-label">发证机构</div>
+                                    <div class="modal-info-value">${cert.issuingAuthority || '-'}</div>
+                                </div>
+                                ${cert.status !== 'pending' && cert.status !== 'draft' ? `
+                                    <div class="modal-info-item" style="grid-column: 1 / -1; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                                        <div class="modal-info-label">审核信息</div>
+                                        <div style="margin-top: 8px;">
+                                            ${cert.auditorName ? `<div style="margin-bottom: 5px;">审核人：${cert.auditorName}</div>` : ''}
+                                            ${cert.auditTime ? `<div style="margin-bottom: 5px;">审核时间：${formatDateTime(cert.auditTime)}</div>` : ''}
+                                            ${cert.status === 'rejected' && cert.rejectReason ? `<div style="margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 6px; color: #721c24;">拒绝原因：${cert.rejectReason}</div>` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div id="rejectReasonSection" style="display: none; margin-top: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #333;">拒绝原因 <span style="color: #f00;">*</span></label>
+                                <textarea id="rejectReason" class="reject-reason" placeholder="请输入拒绝原因"></textarea>
+                            </div>
+                        </div>
+                        <!-- 右侧：健康证图片预览 -->
+                        <div class="modal-image-section">
+                            ${imageUrl ? `
+                                <div class="modal-image-container" onclick="openFullscreen('${imageUrl}')">
+                                    <img src="${imageUrl}" alt="健康证图片" class="modal-image" 
+                                         onerror="console.error('图片加载失败，URL:', '${imageUrl}'); this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>图片加载失败<br/>URL: ${imageUrl}</div>'"
+                                         onload="console.log('图片加载成功，URL:', '${imageUrl}')">
+                                    <div class="fullscreen-hint">点击图片全屏预览</div>
+                                </div>
+                            ` : `
+                                <div class="image-placeholder">暂无图片</div>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                // 根据状态显示/隐藏审核按钮
+                const approveBtn = document.getElementById('approveBtn');
+                const rejectBtn = document.getElementById('rejectBtn');
+                const modalTitle = document.getElementById('modalTitle');
+                
+                // 检查元素是否存在
+                if (!approveBtn || !rejectBtn || !modalTitle) {
+                    console.error('模态框元素未找到:', { approveBtn, rejectBtn, modalTitle });
+                    throw new Error('模态框元素未找到');
+                }
+                
+                if (cert.status === 'pending' && !isViewMode) {
+                    // 待审核状态，显示审核按钮
+                    modalTitle.textContent = '审核健康证';
+                    approveBtn.style.display = 'inline-block';
+                    rejectBtn.style.display = 'inline-block';
+                } else {
+                    // 其他状态，只显示查看
+                    modalTitle.textContent = '查看健康证';
+                    approveBtn.style.display = 'none';
+                    rejectBtn.style.display = 'none';
+                }
+
+                document.getElementById('auditModal').classList.add('show');
+            } catch (error) {
+                console.error('打开审核/查看模态框失败:', error);
+                console.error('错误详情:', error.message, error.stack);
+                alert('加载健康证信息失败：' + (error.message || '未知错误'));
+            }
+        }
+
+        /**
+         * 打开查看模态框（非待审核状态）
+         */
+        async function openViewModal(certId) {
+            currentViewCertId = certId;
+            isViewMode = true;
+            isRejectMode = false;
+            
+            // 复用openAuditModal的逻辑，但会通过isViewMode控制按钮显示
+            await openAuditModal(certId);
+        }
+
+        /**
+         * 关闭审核模态框
+         */
+        function closeAuditModal() {
+            document.getElementById('auditModal').classList.remove('show');
+            currentAuditCertId = null;
+            currentViewCertId = null;
+            isRejectMode = false;
+            isViewMode = false;
+            // 重置拒绝按钮
+            const rejectBtn = document.getElementById('rejectBtn');
+            if (rejectBtn) {
+                rejectBtn.textContent = '拒绝';
+                rejectBtn.onclick = showRejectReason;
+            }
+        }
+
+        /**
+         * 显示拒绝原因输入框
+         */
+        function showRejectReason() {
+            isRejectMode = true;
+            document.getElementById('rejectReasonSection').style.display = 'block';
+            const rejectBtn = document.getElementById('rejectBtn');
+            rejectBtn.textContent = '确认拒绝';
+            rejectBtn.onclick = rejectCertificate;
+        }
+
+        /**
+         * 通过审核
+         */
+        async function approveCertificate() {
+            if (!currentAuditCertId) {
+                return;
+            }
+
+            if (!confirm('确认通过该健康证审核？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/health-cert/audit/${currentAuditCertId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'approve',
+                        reason: ''
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    alert('审核通过成功');
+                    closeAuditModal();
+                    loadHealthCertList(currentPage);
+                } else {
+                    alert(result.message || '审核失败');
+                }
+            } catch (error) {
+                console.error('审核失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        /**
+         * 拒绝审核
+         */
+        async function rejectCertificate() {
+            if (!currentAuditCertId) {
+                return;
+            }
+
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                alert('请输入拒绝原因');
+                document.getElementById('rejectReason').focus();
+                return;
+            }
+
+            if (!confirm('确认拒绝该健康证审核？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/health-cert/audit/${currentAuditCertId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'reject',
+                        reason: reason
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    alert('审核拒绝成功');
+                    closeAuditModal();
+                    loadHealthCertList(currentPage);
+                } else {
+                    alert(result.message || '审核失败');
+                }
+            } catch (error) {
+                console.error('审核失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+
+        /**
+         * 打开全屏预览
+         */
+        function openFullscreen(imageUrl) {
+            const overlay = document.getElementById('fullscreenOverlay');
+            const img = document.getElementById('fullscreenImage');
+            img.src = imageUrl;
+            overlay.classList.add('show');
+            // 阻止body滚动
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * 关闭全屏预览
+         */
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.remove('show');
+            // 恢复body滚动
+            document.body.style.overflow = '';
+        }
+
+        /**
+         * 页面初始化
+         */
+        function init() {
+            if (!checkLogin()) {
+                return;
+            }
+
+            displayUserInfo();
+            loadHealthCertList();
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+
+        // 点击模态框外部关闭
+        document.getElementById('auditModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAuditModal();
+            }
+        });
+
+        // 按ESC键关闭全屏预览
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('fullscreenOverlay');
+                if (overlay.classList.contains('show')) {
+                    closeFullscreen();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

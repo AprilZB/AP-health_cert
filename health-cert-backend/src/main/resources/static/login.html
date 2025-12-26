@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 登录</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 登录容器 */
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LOGO区域 */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .logo-section h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .logo-section p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* 表单样式 */
+        .login-form {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 登录按钮 */
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* 错误提示动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* 加载提示 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式设计 - 移动端适配 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                border-radius: 15px;
+            }
+
+            .logo-section img {
+                max-width: 120px;
+            }
+
+            .logo-section h1 {
+                font-size: 20px;
+            }
+
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 16px; /* 防止iOS自动缩放 */
+            }
+
+            .login-button {
+                padding: 12px;
+                font-size: 15px;
+            }
+        }
+
+        /* 小屏幕适配 */
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 25px 15px;
+            }
+
+            .logo-section h1 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录容器 -->
+    <div class="login-container">
+        <!-- LOGO区域 -->
+        <div class="logo-section">
+            <img src="/assets/LOGO.png" alt="公司LOGO" onerror="this.style.display='none'">
+            <h1>员工健康证管理系统</h1>
+            <p>Employee Health Certificate Management System</p>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 登录表单 -->
+        <form class="login-form" id="loginForm">
+            <!-- 账号输入框 -->
+            <div class="form-group">
+                <label for="username">账号</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    placeholder="请输入账号" 
+                    required 
+                    autocomplete="username"
+                >
+            </div>
+
+            <!-- 密码输入框 -->
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="请输入密码" 
+                    required 
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <!-- 登录按钮 -->
+            <button type="submit" class="login-button" id="loginButton">
+                登录
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // API基础地址
+        const API_BASE_URL = '/api';
+
+        // 获取DOM元素
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        /**
+         * 显示错误消息
+         * @param {string} message - 错误消息
+         */
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            
+            // 3秒后自动隐藏错误消息
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        /**
+         * 隐藏错误消息
+         */
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        /**
+         * 设置按钮加载状态
+         * @param {boolean} loading - 是否加载中
+         */
+        function setButtonLoading(loading) {
+            if (loading) {
+                loginButton.disabled = true;
+                loginButton.innerHTML = '<span class="loading"></span>登录中...';
+            } else {
+                loginButton.disabled = false;
+                loginButton.textContent = '登录';
+            }
+        }
+
+        /**
+         * 处理登录成功
+         * @param {Object} data - 登录响应数据
+         */
+        function handleLoginSuccess(data) {
+            // 保存token到localStorage
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
+
+            // 保存用户信息到localStorage（可选）
+            if (data.userId) {
+                localStorage.setItem('userId', data.userId);
+            }
+            if (data.username) {
+                localStorage.setItem('username', data.username);
+            }
+            if (data.userType) {
+                localStorage.setItem('userType', data.userType);
+            }
+
+            // 根据userType跳转页面
+            const userType = data.userType;
+            if (userType === 'admin') {
+                // 管理员跳转到管理后台
+                window.location.href = 'admin-dashboard.html';
+            } else if (userType === 'employee') {
+                // 员工跳转到员工首页
+                window.location.href = 'employee-home.html';
+            } else {
+                // 未知用户类型，显示错误
+                showError('未知的用户类型，请联系管理员');
+            }
+        }
+
+        /**
+         * 处理登录失败
+         * @param {string} message - 错误消息
+         */
+        function handleLoginError(message) {
+            showError(message || '登录失败，请检查账号密码');
+            setButtonLoading(false);
+        }
+
+        /**
+         * 发送登录请求
+         * @param {string} username - 用户名
+         * @param {string} password - 密码
+         */
+        async function login(username, password) {
+            try {
+                // 发送POST请求到登录接口
+                const response = await fetch(API_BASE_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                // 解析响应
+                const result = await response.json();
+
+                // 检查响应状态
+                if (response.ok && result.code === 200) {
+                    // 登录成功
+                    handleLoginSuccess(result.data);
+                } else {
+                    // 登录失败
+                    handleLoginError(result.message || '登录失败');
+                }
+            } catch (error) {
+                // 网络错误或其他异常
+                console.error('登录请求失败:', error);
+                handleLoginError('网络错误，请稍后重试');
+            }
+        }
+
+        /**
+         * 表单提交事件处理
+         */
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // 阻止默认表单提交
+
+            // 隐藏之前的错误消息
+            hideError();
+
+            // 获取输入值
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            // 验证输入
+            if (!username) {
+                showError('请输入账号');
+                usernameInput.focus();
+                return;
+            }
+
+            if (!password) {
+                showError('请输入密码');
+                passwordInput.focus();
+                return;
+            }
+
+            // 设置按钮加载状态
+            setButtonLoading(true);
+
+            // 发送登录请求
+            login(username, password);
+        });
+
+        // 页面加载完成后的初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            // 如果已经登录，检查token并跳转
+            const token = localStorage.getItem('token');
+            const userType = localStorage.getItem('userType');
+            
+            if (token && userType) {
+                // 已登录，直接跳转
+                if (userType === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else if (userType === 'employee') {
+                    window.location.href = 'employee-home.html';
+                }
+            }
+
+            // 聚焦到用户名输入框
+            usernameInput.focus();
+        });
+
+        // 回车键快速登录（在密码框按回车）
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
+

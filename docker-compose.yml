@@ -1,0 +1,127 @@
+# 员工健康证管理系统 - Docker Compose配置文件
+# 定义MySQL、后端服务和Nginx三个服务
+
+# version: '3.8'
+
+services:
+  # ==================== MySQL数据库服务 ====================
+  mysql:
+    image: mysql:8.0
+    container_name: health-cert-mysql
+    restart: unless-stopped
+    environment:
+      # MySQL root用户密码
+      MYSQL_ROOT_PASSWORD: root123
+      # 创建数据库
+      MYSQL_DATABASE: health_cert_db
+      # 设置字符集
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      # 映射MySQL端口（主机:容器）
+      - "3306:3306"
+    volumes:
+      # 挂载MySQL数据目录，持久化数据
+      - mysql_data:/var/lib/mysql
+      # 挂载初始化SQL脚本（可选，用于首次启动时自动执行）
+      - ./health-cert-backend/src/main/resources/sql:/docker-entrypoint-initdb.d
+    command:
+      # MySQL启动参数
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    networks:
+      - health-cert-network
+    healthcheck:
+      # 健康检查，确保MySQL完全启动后再启动其他服务
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== 后端服务 ====================
+  backend:
+    build:
+      # Dockerfile所在目录
+      context: ./health-cert-backend
+      dockerfile: Dockerfile
+    container_name: health-cert-backend
+    restart: unless-stopped
+    depends_on:
+      # 等待MySQL健康检查通过后再启动
+      mysql:
+        condition: service_healthy
+    environment:
+      # Spring Boot数据源配置（通过环境变量覆盖application.yml）
+      # 使用UTF-8字符集，确保中文正确显示
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/health_cert_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root123
+      # JVM参数（可选）
+      JAVA_OPTS: "-Xms512m -Xmx1024m -Dfile.encoding=UTF-8"
+    ports:
+      # 映射后端服务端口（仅用于调试，生产环境可通过Nginx访问）
+      - "8080:8080"
+    volumes:
+      # 挂载上传文件目录
+      - uploads:/app/uploads
+      # 挂载下载文件目录
+      - downloads:/app/downloads
+      # 挂载备份文件目录
+      - backups:/app/backups
+    networks:
+      - health-cert-network
+    healthcheck:
+      # 健康检查，确保后端服务完全启动后再启动Nginx
+      # 使用wget检查健康检查端点（不需要认证）
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/auth/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # ==================== Nginx反向代理服务 ====================
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: health-cert-nginx
+    restart: unless-stopped
+    depends_on:
+      # 等待后端服务健康检查通过后再启动
+      backend:
+        condition: service_healthy
+    ports:
+      # 映射Nginx端口（主机80端口 -> 容器80端口）
+      - "80:80"
+    volumes:
+      # 挂载Nginx配置文件
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # 挂载静态文件目录（从后端服务复制）
+      - ./health-cert-backend/src/main/resources/static:/usr/share/nginx/html/static:ro
+      # 挂载上传文件目录（用于直接访问上传的文件）
+      - uploads:/usr/share/nginx/html/uploads:ro
+      # 挂载下载文件目录（用于直接访问导出的文件）
+      - downloads:/usr/share/nginx/html/downloads:ro
+    networks:
+      - health-cert-network
+
+# ==================== 网络配置 ====================
+networks:
+  health-cert-network:
+    driver: bridge
+    name: health-cert-network
+
+# ==================== 数据卷配置 ====================
+volumes:
+  # MySQL数据卷（持久化数据库数据）
+  mysql_data:
+    name: health-cert-mysql-data
+  # 上传文件卷（持久化用户上传的健康证图片）
+  uploads:
+    name: health-cert-uploads
+  # 下载文件卷（持久化导出的Excel/PDF文件）
+  downloads:
+    name: health-cert-downloads
+  # 备份文件卷（持久化数据库备份文件）
+  backups:
+    name: health-cert-backups
+

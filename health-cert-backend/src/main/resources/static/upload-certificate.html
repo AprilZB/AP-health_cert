@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 上传健康证</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* 容器 */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* 图片上传区域 */
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f0ff;
+        }
+
+        .upload-area.has-image {
+            border: none;
+            padding: 0;
+            background: transparent;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .image-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .image-action-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-action-btn:hover {
+            background: #f5f5f5;
+        }
+
+        /* 隐藏的文件输入 */
+        #fileInput {
+            display: none;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group label .required {
+            color: #f00;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* 提交按钮 */
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* 成功提示 */
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式设计 - 移动端适配 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 14px; /* 移动端增大点击区域 */
+                font-size: 16px; /* 防止iOS自动缩放 */
+            }
+
+            .submit-button {
+                padding: 16px; /* 移动端大按钮 */
+                font-size: 16px;
+            }
+
+            .upload-area {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <h1>上传健康证</h1>
+    </div>
+
+    <div class="container">
+        <!-- 错误提示 -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 成功提示 -->
+        <div class="success-message" id="successMessage"></div>
+
+        <!-- 图片上传卡片 -->
+        <div class="card">
+            <h2>上传健康证图片</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">点击或拖拽图片到此处上传</div>
+                <div class="upload-hint">支持 JPG、PNG、BMP 格式，文件大小不超过 10MB</div>
+                <div class="upload-hint" style="margin-top: 5px;">移动端支持拍照上传</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/bmp" capture="environment">
+        </div>
+
+        <!-- 健康证信息表单 -->
+        <div class="card">
+            <h2>健康证信息</h2>
+            <form id="certificateForm">
+                <!-- 第一行：编号、姓名 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="certNumber">健康证编号 <span class="required">*</span></label>
+                        <input type="text" id="certNumber" name="certNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employeeName">姓名 <span class="required">*</span></label>
+                        <input type="text" id="employeeName" name="employeeName" required>
+                    </div>
+                </div>
+
+                <!-- 第二行：性别、年龄 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender">性别</label>
+                        <select id="gender" name="gender">
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">年龄</label>
+                        <input type="number" id="age" name="age" min="1" max="150">
+                    </div>
+                </div>
+
+                <!-- 第三行：身份证号、类别 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="idCard">身份证号</label>
+                        <input type="text" id="idCard" name="idCard" maxlength="18">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">健康证类别</label>
+                        <input type="text" id="category" name="category">
+                    </div>
+                </div>
+
+                <!-- 第四行：发证日期、有效期至 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="issueDate">发证日期 <span class="required">*</span></label>
+                        <input type="date" id="issueDate" name="issueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryDate">有效期至 <span class="required">*</span></label>
+                        <input type="date" id="expiryDate" name="expiryDate" required>
+                    </div>
+                </div>
+
+                <!-- 发证机构 -->
+                <div class="form-group">
+                    <label for="issuingAuthority">发证机构</label>
+                    <input type="text" id="issuingAuthority" name="issuingAuthority">
+                </div>
+
+                <!-- 提交按钮 -->
+                <button type="submit" class="submit-button" id="submitButton">
+                    提交审核
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API基础地址
+        const API_BASE_URL = '/api';
+
+        // 获取DOM元素
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const certificateForm = document.getElementById('certificateForm');
+        const submitButton = document.getElementById('submitButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // 当前上传的图片
+        let currentImageFile = null;
+        let currentImagePath = null;
+
+        /**
+         * 获取Token
+         */
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        /**
+         * 检查登录状态
+         */
+        function checkLogin() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 显示错误消息
+         */
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            successMessage.classList.remove('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        /**
+         * 显示成功消息
+         */
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('show');
+            errorMessage.classList.remove('show');
+        }
+
+        /**
+         * 隐藏消息
+         */
+        function hideMessages() {
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+        }
+
+        /**
+         * 设置按钮加载状态
+         */
+        function setButtonLoading(loading) {
+            if (loading) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="loading"></span>提交中...';
+            } else {
+                submitButton.disabled = false;
+                submitButton.textContent = '提交审核';
+            }
+        }
+
+        /**
+         * 验证图片文件
+         */
+        function validateImage(file) {
+            // 检查文件类型
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/bmp'];
+            if (!allowedTypes.includes(file.type)) {
+                showError('只支持 JPG、PNG、BMP 格式的图片');
+                return false;
+            }
+
+            // 检查文件大小（10MB）
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showError('图片大小不能超过 10MB');
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * 显示上传的图片
+         */
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadArea.classList.add('has-image');
+                uploadArea.innerHTML = `
+                    <img src="${e.target.result}" alt="健康证图片" class="uploaded-image" id="uploadedImage">
+                    <div class="image-actions">
+                        <button type="button" class="image-action-btn" onclick="removeImage()">重新选择</button>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * 移除图片
+         */
+        function removeImage() {
+            currentImageFile = null;
+            currentImagePath = null;
+            uploadArea.classList.remove('has-image');
+            uploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">点击或拖拽图片到此处上传</div>
+                <div class="upload-hint">支持 JPG、PNG、BMP 格式，文件大小不超过 10MB</div>
+                <div class="upload-hint" style="margin-top: 5px;">移动端支持拍照上传</div>
+            `;
+            fileInput.value = '';
+        }
+
+        /**
+         * 处理文件选择
+         */
+        function handleFileSelect(file) {
+            if (!validateImage(file)) {
+                return;
+            }
+
+            currentImageFile = file;
+            displayImage(file);
+
+            // 自动上传并调用OCR
+            uploadAndOcr(file);
+        }
+
+        /**
+         * 上传图片并调用OCR识别
+         */
+        async function uploadAndOcr(file) {
+            hideMessages();
+            setButtonLoading(true);
+
+            try {
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('image', file);
+
+                // 发送上传请求
+                const response = await fetch(API_BASE_URL + '/health-cert/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    const data = result.data || {};
+                    
+                    // 调试：打印OCR返回的数据
+                    console.log('OCR返回数据:', data);
+                    
+                    // 保存图片路径
+                    currentImagePath = data.imagePath;
+
+                    // 自动填充表单字段（如果OCR识别成功）
+                    let filledCount = 0;
+                    
+                    if (data.certNumber) {
+                        document.getElementById('certNumber').value = data.certNumber;
+                        filledCount++;
+                    }
+                    if (data.employeeName) {
+                        document.getElementById('employeeName').value = data.employeeName;
+                        filledCount++;
+                    }
+                    if (data.gender) {
+                        document.getElementById('gender').value = data.gender;
+                        filledCount++;
+                    }
+                    if (data.age) {
+                        document.getElementById('age').value = data.age;
+                        filledCount++;
+                    }
+                    if (data.idCard) {
+                        document.getElementById('idCard').value = data.idCard;
+                        filledCount++;
+                    }
+                    if (data.category) {
+                        document.getElementById('category').value = data.category;
+                        filledCount++;
+                    }
+                    if (data.issueDate) {
+                        // 处理日期格式（后端返回的是"YYYY-MM-DD"格式）
+                        const issueDateStr = typeof data.issueDate === 'string' 
+                            ? data.issueDate 
+                            : data.issueDate.split('T')[0]; // 处理ISO格式
+                        document.getElementById('issueDate').value = issueDateStr;
+                        filledCount++;
+                    }
+                    if (data.expiryDate) {
+                        // 处理日期格式（后端返回的是"YYYY-MM-DD"格式）
+                        const expiryDateStr = typeof data.expiryDate === 'string' 
+                            ? data.expiryDate 
+                            : data.expiryDate.split('T')[0]; // 处理ISO格式
+                        document.getElementById('expiryDate').value = expiryDateStr;
+                        filledCount++;
+                    }
+                    if (data.issuingAuthority) {
+                        document.getElementById('issuingAuthority').value = data.issuingAuthority;
+                        filledCount++;
+                    }
+
+                    console.log('OCR识别成功，填充了 ' + filledCount + ' 个字段');
+                    
+                    if (filledCount > 0) {
+                        showSuccess('图片上传成功，OCR识别完成（已填充' + filledCount + '个字段，可手动修改）');
+                    } else {
+                        showSuccess('图片上传成功，但OCR识别未提取到信息，请手动填写');
+                    }
+                } else {
+                    // OCR识别失败，允许手动填写
+                    if (result.data && result.data.imagePath) {
+                        currentImagePath = result.data.imagePath;
+                        showSuccess('图片上传成功，请手动填写健康证信息');
+                    } else {
+                        showError(result.message || '上传失败，请重试');
+                    }
+                }
+            } catch (error) {
+                console.error('上传失败:', error);
+                showError('网络错误，请稍后重试');
+            } finally {
+                setButtonLoading(false);
+            }
+        }
+
+        /**
+         * 提交健康证
+         */
+        async function submitCertificate() {
+            hideMessages();
+
+            // 验证必填字段
+            const certNumber = document.getElementById('certNumber').value.trim();
+            const employeeName = document.getElementById('employeeName').value.trim();
+            const issueDate = document.getElementById('issueDate').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const imagePath = currentImagePath;
+
+            if (!certNumber) {
+                showError('请输入健康证编号');
+                document.getElementById('certNumber').focus();
+                return;
+            }
+
+            if (!employeeName) {
+                showError('请输入姓名');
+                document.getElementById('employeeName').focus();
+                return;
+            }
+
+            if (!issueDate) {
+                showError('请选择发证日期');
+                document.getElementById('issueDate').focus();
+                return;
+            }
+
+            if (!expiryDate) {
+                showError('请选择有效期至');
+                document.getElementById('expiryDate').focus();
+                return;
+            }
+
+            if (!imagePath) {
+                showError('请先上传健康证图片');
+                return;
+            }
+
+            setButtonLoading(true);
+
+            try {
+                // 构建提交数据
+                const submitData = {
+                    certNumber: certNumber,
+                    employeeName: employeeName,
+                    gender: document.getElementById('gender').value,
+                    age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
+                    idCard: document.getElementById('idCard').value.trim(),
+                    category: document.getElementById('category').value.trim(),
+                    issueDate: issueDate,
+                    expiryDate: expiryDate,
+                    issuingAuthority: document.getElementById('issuingAuthority').value.trim(),
+                    imagePath: imagePath
+                };
+
+                // 发送提交请求
+                const response = await fetch(API_BASE_URL + '/health-cert/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submitData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.code === 200) {
+                    showSuccess('提交成功！正在跳转...');
+                    setTimeout(() => {
+                        window.location.href = 'employee-home.html';
+                    }, 1500);
+                } else {
+                    showError(result.message || '提交失败，请重试');
+                    setButtonLoading(false);
+                }
+            } catch (error) {
+                console.error('提交失败:', error);
+                showError('网络错误，请稍后重试');
+                setButtonLoading(false);
+            }
+        }
+
+        // 文件输入框变化事件
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFileSelect(file);
+            }
+        });
+
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', function() {
+            if (!uploadArea.classList.contains('has-image')) {
+                fileInput.click();
+            }
+        });
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // 表单提交事件
+        certificateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitCertificate();
+        });
+
+        // 页面初始化
+        function init() {
+            // 检查登录状态
+            if (!checkLogin()) {
+                return;
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

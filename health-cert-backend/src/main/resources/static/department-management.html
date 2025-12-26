@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工健康证管理系统 - 部门管理</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏（复用样式） */
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-header h1 {
+            display: none;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .nav-menu {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-item-icon {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .nav-item-icon {
+            margin-right: 0;
+        }
+
+        .nav-item-text {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .nav-item-text {
+            display: none;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 60px;
+        }
+
+        /* 顶部栏 */
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 30px;
+        }
+
+        /* 列表卡片 */
+        .list-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+
+        .list-card h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-item label {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .filter-item input,
+        .filter-item select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            background: #5568d3;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        /* 树状结构样式 */
+        .tree-container {
+            padding: 20px;
+        }
+
+        .tree-node {
+            margin-bottom: 8px;
+        }
+
+        .tree-node-content {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tree-node-content:hover {
+            background: #f5f5f5;
+            border-color: #667eea;
+        }
+
+        .tree-node-content.expanded {
+            border-color: #667eea;
+        }
+
+        .tree-toggle {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease;
+        }
+
+        .tree-toggle:hover {
+            color: #667eea;
+        }
+
+        .tree-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-toggle.no-children {
+            visibility: hidden;
+        }
+
+        .tree-indent {
+            display: inline-block;
+            width: 24px;
+        }
+
+        .tree-node-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tree-node-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            min-width: 200px;
+        }
+
+        .tree-node-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .tree-node-supervisor {
+            min-width: 100px;
+        }
+
+        .tree-node-supervisor-label {
+            color: #999;
+            margin-right: 5px;
+        }
+
+        .tree-node-count {
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .tree-node-count-label {
+            color: #999;
+            margin-right: 5px;
+        }
+
+        .tree-node-count-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tree-node-status {
+            min-width: 80px;
+        }
+
+        .tree-node-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .tree-children {
+            margin-left: 34px;
+            margin-top: 8px;
+            border-left: 2px solid #e8e8e8;
+            padding-left: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btn.small {
+            padding: 4px 12px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .action-btn.enable {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-btn.enable:hover {
+            background: #218838;
+        }
+
+        .action-btn.disable {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn.disable:hover {
+            background: #c82333;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f5f5f5;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 树形结构缩进 */
+        .dept-name {
+            display: flex;
+            align-items: center;
+        }
+
+        .dept-indent {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar:not(.collapsed) {
+                width: 250px;
+            }
+
+            .main-content {
+                margin-left: 60px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>健康证管理系统</h1>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item" onclick="navigate('admin-dashboard.html')">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-text">工作台</span>
+            </div>
+            <div class="nav-item" onclick="navigate('cert-audit.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">健康证管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('employee-management.html')">
+                <span class="nav-item-icon">👥</span>
+                <span class="nav-item-text">员工管理</span>
+            </div>
+            <div class="nav-item active" onclick="navigate('department-management.html')">
+                <span class="nav-item-icon">🏢</span>
+                <span class="nav-item-text">部门管理</span>
+            </div>
+            <div class="nav-item" onclick="navigate('operation-logs.html')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">操作日志</span>
+            </div>
+            <div class="nav-item" onclick="navigate('system-config.html')">
+                <span class="nav-item-icon">⚙️</span>
+                <span class="nav-item-text">系统配置</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="topbar">
+            <h2>部门管理</h2>
+            <div class="user-info">
+                <span class="user-name" id="userName">加载中...</span>
+                <button class="logout-btn" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content">
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label>部门名称:</label>
+                        <input type="text" id="filterDeptName" placeholder="请输入部门名称">
+                    </div>
+                    <div class="filter-item">
+                        <label>状态:</label>
+                        <select id="filterStatus">
+                            <option value="">全部</option>
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                    <button class="filter-btn" onclick="loadDepartmentTree()">查询</button>
+                    <button class="filter-btn" onclick="resetFilters()">重置</button>
+                </div>
+            </div>
+
+            <!-- 列表卡片 -->
+            <div class="list-card">
+                <div class="action-bar">
+                    <h3>部门列表</h3>
+                    <button class="action-btn primary" onclick="updateEmployeeCount()">更新人数统计</button>
+                </div>
+                <div id="departmentTreeContainer">
+                    <div id="departmentTreeBody" class="tree-container">
+                        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        /**
+         * 获取Token
+         */
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        /**
+         * 检查登录状态
+         */
+        function checkLogin() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 切换侧边栏
+         */
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        /**
+         * 导航到指定页面
+         */
+        function navigate(url) {
+            window.location.href = url;
+        }
+
+        /**
+         * 退出登录
+         */
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        /**
+         * 显示用户信息
+         */
+        function displayUserInfo() {
+            const username = localStorage.getItem('username') || '管理员';
+            document.getElementById('userName').textContent = username;
+        }
+
+        // 存储展开/折叠状态
+        const expandedNodes = new Set();
+
+        /**
+         * 加载部门树
+         */
+        async function loadDepartmentTree() {
+            try {
+                showLoading();
+                const container = document.getElementById('departmentTreeBody');
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+
+                // 调用API获取树状结构数据
+                const response = await apiGet('/admin/department/tree-with-details');
+                
+                if (response.code === 200) {
+                    const treeData = response.data || [];
+                    renderDepartmentTree(treeData);
+                } else {
+                    console.error('API返回错误:', response);
+                    showMessage('error', response.message || '加载部门列表失败');
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #c33;">
+                            加载失败：${response.message || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载部门列表失败:', error);
+                showMessage('error', '加载部门列表失败：' + error.message);
+                const container = document.getElementById('departmentTreeBody');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #c33;">
+                        网络错误，请稍后重试
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * 渲染部门树
+         */
+        function renderDepartmentTree(nodes) {
+            const container = document.getElementById('departmentTreeBody');
+            
+            if (!nodes || nodes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        暂无数据
+                    </div>
+                `;
+                return;
+            }
+
+            // 保存当前展开状态（通过DOM查找）
+            const currentExpanded = new Set();
+            const existingNodes = container.querySelectorAll('.tree-node');
+            existingNodes.forEach(node => {
+                const nodeId = node.id;
+                if (nodeId) {
+                    const content = node.querySelector('.tree-node-content');
+                    if (content && content.classList.contains('expanded')) {
+                        const idMatch = nodeId.match(/dept-(\d+)/);
+                        if (idMatch) {
+                            currentExpanded.add(parseInt(idMatch[1]));
+                        }
+                    }
+                }
+            });
+
+            // 合并保存的展开状态
+            currentExpanded.forEach(id => expandedNodes.add(id));
+
+            container.innerHTML = nodes.map(node => renderTreeNode(node, 0)).join('');
+        }
+
+        /**
+         * 渲染单个树节点
+         */
+        function renderTreeNode(node, level) {
+            const hasChildren = node.children && node.children.length > 0;
+            const isExpanded = expandedNodes.has(node.id);
+            const nodeId = `dept-${node.id}`;
+
+            const toggleIcon = hasChildren 
+                ? (isExpanded ? '▼' : '▶')
+                : '';
+            const toggleClass = hasChildren 
+                ? (isExpanded ? 'tree-toggle expanded' : 'tree-toggle')
+                : 'tree-toggle no-children';
+
+            const statusBadge = node.isActive === 1 
+                ? '<span class="status-badge active">启用</span>'
+                : '<span class="status-badge inactive">禁用</span>';
+            
+            const actionBtn = node.isActive === 1
+                ? `<button class="action-btn small disable" onclick="event.stopPropagation(); toggleDepartment(${node.id}, 0)">禁用</button>`
+                : `<button class="action-btn small enable" onclick="event.stopPropagation(); toggleDepartment(${node.id}, 1)">启用</button>`;
+
+            const supervisorName = node.supervisorName || '-';
+            const employeeCount = node.employeeCount || 0;
+
+            let html = `
+                <div class="tree-node" id="${nodeId}">
+                    <div class="tree-node-content ${isExpanded ? 'expanded' : ''}" 
+                         onclick="toggleNode(${node.id})">
+                        <span class="${toggleClass}" onclick="event.stopPropagation(); toggleNode(${node.id})">${toggleIcon}</span>
+                        <div class="tree-node-info">
+                            <div class="tree-node-name">${node.deptName}</div>
+                            <div class="tree-node-meta">
+                                <div class="tree-node-supervisor">
+                                    <span class="tree-node-supervisor-label">主管：</span>
+                                    <span>${supervisorName}</span>
+                                </div>
+                                <div class="tree-node-count">
+                                    <span class="tree-node-count-label">人数：</span>
+                                    <span class="tree-node-count-value">${employeeCount}</span>
+                                </div>
+                                <div class="tree-node-status">${statusBadge}</div>
+                            </div>
+                        </div>
+                        <div class="tree-node-actions">
+                            ${actionBtn}
+                        </div>
+                    </div>
+            `;
+
+            // 如果有子节点且已展开，渲染子节点
+            if (hasChildren && isExpanded) {
+                html += '<div class="tree-children">';
+                html += node.children.map(child => renderTreeNode(child, level + 1)).join('');
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        /**
+         * 切换节点展开/折叠
+         */
+        function toggleNode(nodeId) {
+            if (expandedNodes.has(nodeId)) {
+                expandedNodes.delete(nodeId);
+            } else {
+                expandedNodes.add(nodeId);
+            }
+            // 重新加载树（保持展开状态）
+            loadDepartmentTree();
+        }
+
+        /**
+         * 重置筛选条件
+         */
+        function resetFilters() {
+            document.getElementById('filterDeptName').value = '';
+            document.getElementById('filterStatus').value = '';
+            loadDepartmentTree();
+        }
+
+        /**
+         * 更新部门人数统计
+         */
+        async function updateEmployeeCount() {
+            try {
+                if (!confirm('确定要更新所有部门的人数统计吗？')) {
+                    return;
+                }
+
+                showLoading();
+                const response = await apiPost('/admin/department/update-employee-count');
+                
+                if (response.code === 200) {
+                    showMessage('success', response.data || '更新成功');
+                    loadDepartmentTree();
+                } else {
+                    showMessage('error', response.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新人数统计失败:', error);
+                showMessage('error', '更新人数统计失败：' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * 启用/禁用部门
+         */
+        async function toggleDepartment(id, isActive) {
+            try {
+                const action = isActive === 1 ? '启用' : '禁用';
+                if (!confirm(`确定要${action}该部门吗？`)) {
+                    return;
+                }
+
+                showLoading();
+                const response = await apiPut(`/admin/department/${id}/active?isActive=${isActive}`);
+                
+                if (response.code === 200) {
+                    showMessage('success', response.data || `${action}成功`);
+                    loadDepartmentTree();
+                } else {
+                    showMessage('error', response.message || `${action}失败`);
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                showMessage('error', '操作失败：' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * 页面初始化
+         */
+        function init() {
+            if (!checkLogin()) {
+                return;
+            }
+
+            displayUserInfo();
+            loadDepartmentTree();
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
