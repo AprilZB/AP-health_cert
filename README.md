@@ -489,5 +489,5 @@ docker-compose exec -T mysql mysql -uroot -proot123 health_cert_db < backup.sql
 
 ---
 
-**最后更新**：2024年12月26日
+**最后更新**：2025年12月26日12月26日
 
