@@ -1077,7 +1077,7 @@
                                         <div class="modal-info-label">提交时间</div>
                                         <div class="modal-info-value">${cert.submitTime ? formatDateTime(cert.submitTime) : '-'}</div>
                                     </div>
-                                    ${cert.rejectReason ? `
+                                    ${cert.status === 'rejected' && cert.rejectReason ? `
                                     <div class="modal-info-item" style="grid-column: 1 / -1;">
                                         <div class="modal-info-label">拒绝原因</div>
                                         <div class="modal-info-value" style="color: #e74c3c;">${cert.rejectReason}</div>

@@ -36,7 +36,7 @@ CREATE TABLE `employees` (
 -- 2. 健康证表 (health_certificates)
 CREATE TABLE `health_certificates` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `cert_number` VARCHAR(100) NOT NULL COMMENT '健康证编号(全局唯一)',
+  `cert_number` VARCHAR(100) NOT NULL COMMENT '健康证编号(允许重复，但is_current=1时唯一)',
   `employee_id` BIGINT(20) NOT NULL COMMENT '员工ID(关联employees.id)',
   `sf_user_id` VARCHAR(50) NOT NULL COMMENT '员工域账号(冗余字段)',
   `employee_name` VARCHAR(100) NOT NULL COMMENT '员工姓名',
@@ -60,7 +60,8 @@ CREATE TABLE `health_certificates` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_cert_number` (`cert_number`),
+  KEY `idx_cert_number` (`cert_number`),
+  KEY `idx_cert_number_is_current` (`cert_number`, `is_current`),
   KEY `idx_employee_id` (`employee_id`),
   KEY `idx_sf_user_id` (`sf_user_id`),
   KEY `idx_status` (`status`),

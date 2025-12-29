@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,8 +127,29 @@ public class AdminHealthCertServiceImpl implements AdminHealthCertService {
         healthCert.setAuditTime(LocalDateTime.now());
         healthCert.setAuditorId(adminId);
         healthCert.setAuditorName(adminName);
-        if ("reject".equals(action)) {
+        
+        if ("approve".equals(action)) {
+            // 审核通过：将同一员工的其他健康证设为is_current=0，当前健康证设为is_current=1
+            // 保证同一员工只有一个is_current=1的健康证
+            LambdaQueryWrapper<HealthCertificate> updateWrapper = new LambdaQueryWrapper<>();
+            updateWrapper.eq(HealthCertificate::getEmployeeId, healthCert.getEmployeeId())
+                        .eq(HealthCertificate::getIsCurrent, 1)
+                        .ne(HealthCertificate::getId, certId); // 排除当前健康证
+            
+            List<HealthCertificate> otherCerts = healthCertificateMapper.selectList(updateWrapper);
+            for (HealthCertificate otherCert : otherCerts) {
+                otherCert.setIsCurrent(0);
+                otherCert.setUpdatedAt(LocalDateTime.now());
+                healthCertificateMapper.updateById(otherCert);
+            }
+            
+            // 将当前健康证设为is_current=1
+            healthCert.setIsCurrent(1);
+            healthCert.setRejectReason(null); // 清空拒绝原因（如果之前有）
+        } else {
+            // 审核拒绝：设置拒绝原因，is_current保持不变（不改变）
             healthCert.setRejectReason(reason);
+            // is_current保持原值不变
         }
 
         healthCertificateMapper.updateById(healthCert);

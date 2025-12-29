@@ -109,39 +109,50 @@ public class HealthCertServiceImpl implements HealthCertService {
             throw new RuntimeException("员工信息不存在");
         }
 
-        // 检查健康证编号是否已存在
+        // 检查健康证编号是否已存在且is_current=1（保证生效记录的唯一性）
         LambdaQueryWrapper<HealthCertificate> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(HealthCertificate::getCertNumber, dto.getCertNumber());
-        HealthCertificate existingCert = healthCertificateMapper.selectOne(wrapper);
+        wrapper.eq(HealthCertificate::getCertNumber, dto.getCertNumber())
+               .eq(HealthCertificate::getIsCurrent, 1);
+        HealthCertificate existingCurrentCert = healthCertificateMapper.selectOne(wrapper);
 
-        if (existingCert != null) {
-            // 如果健康证已存在
-            if ("rejected".equals(existingCert.getStatus())) {
-                // 如果状态是已拒绝，允许重新提交（更新记录）
-                BeanUtils.copyProperties(dto, existingCert);
-                existingCert.setEmployeeId(userId);
-                existingCert.setSfUserId(employee.getSfUserId());
-                existingCert.setEmployeeName(employee.getName());
-                existingCert.setStatus("pending"); // 重新设置为待审核状态
-                existingCert.setSubmitTime(LocalDateTime.now());
-                existingCert.setRejectReason(null); // 清空拒绝原因
-                existingCert.setAuditTime(null); // 清空审核时间
-                existingCert.setAuditorId(null); // 清空审核人ID
-                existingCert.setAuditorName(null); // 清空审核人姓名
-                existingCert.setVersion(existingCert.getVersion() + 1); // 版本号递增
-                existingCert.setUpdatedAt(LocalDateTime.now());
+        // 如果编号已存在且is_current=1，先将旧的设为is_current=0（保证生效记录唯一性）
+        if (existingCurrentCert != null) {
+            existingCurrentCert.setIsCurrent(0);
+            existingCurrentCert.setUpdatedAt(LocalDateTime.now());
+            healthCertificateMapper.updateById(existingCurrentCert);
+        }
 
-                // 更新健康证记录
-                healthCertificateMapper.updateById(existingCert);
+        // 检查是否有相同编号且状态为rejected的记录（允许重新提交）
+        LambdaQueryWrapper<HealthCertificate> rejectedWrapper = new LambdaQueryWrapper<>();
+        rejectedWrapper.eq(HealthCertificate::getCertNumber, dto.getCertNumber())
+                      .eq(HealthCertificate::getStatus, "rejected")
+                      .orderByDesc(HealthCertificate::getCreatedAt)
+                      .last("LIMIT 1");
+        HealthCertificate rejectedCert = healthCertificateMapper.selectOne(rejectedWrapper);
 
-                // 记录操作日志
-                saveOperationLog(userId, username, "employee", "resubmit", "重新提交健康证，编号：" + dto.getCertNumber());
-            } else {
-                // 如果状态不是已拒绝，则不允许重复提交
-                throw new IllegalArgumentException("健康证编号已存在");
-            }
+        if (rejectedCert != null) {
+            // 如果存在已拒绝的记录，更新该记录（重新提交）
+            BeanUtils.copyProperties(dto, rejectedCert);
+            rejectedCert.setEmployeeId(userId);
+            rejectedCert.setSfUserId(employee.getSfUserId());
+            rejectedCert.setEmployeeName(employee.getName());
+            rejectedCert.setStatus("pending"); // 重新设置为待审核状态
+            rejectedCert.setSubmitTime(LocalDateTime.now());
+            rejectedCert.setRejectReason(null); // 清空拒绝原因
+            rejectedCert.setAuditTime(null); // 清空审核时间
+            rejectedCert.setAuditorId(null); // 清空审核人ID
+            rejectedCert.setAuditorName(null); // 清空审核人姓名
+            rejectedCert.setIsCurrent(0); // 待审核状态时设为0，审核通过后再设为1
+            rejectedCert.setVersion(rejectedCert.getVersion() + 1); // 版本号递增
+            rejectedCert.setUpdatedAt(LocalDateTime.now());
+
+            // 更新健康证记录
+            healthCertificateMapper.updateById(rejectedCert);
+
+            // 记录操作日志
+            saveOperationLog(userId, username, "employee", "resubmit", "重新提交健康证，编号：" + dto.getCertNumber());
         } else {
-            // 如果健康证不存在，创建新记录
+            // 如果不存在已拒绝的记录，创建新记录
             HealthCertificate healthCert = new HealthCertificate();
             BeanUtils.copyProperties(dto, healthCert);
             healthCert.setEmployeeId(userId);
@@ -149,7 +160,7 @@ public class HealthCertServiceImpl implements HealthCertService {
             healthCert.setEmployeeName(employee.getName());
             healthCert.setStatus("pending"); // 状态为待审核
             healthCert.setSubmitTime(LocalDateTime.now());
-            healthCert.setIsCurrent(1);
+            healthCert.setIsCurrent(0); // 待审核状态时设为0，审核通过后再设为1
             healthCert.setVersion(1);
 
             // 保存健康证记录
