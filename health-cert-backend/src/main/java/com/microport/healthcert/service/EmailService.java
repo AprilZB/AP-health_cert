@@ -18,8 +18,18 @@ public interface EmailService {
      * @param to 收件人邮箱
      * @param subject 邮件主题
      * @param content 邮件内容
+     * @throws Exception 发送失败时抛出异常
      */
-    void sendEmail(String to, String subject, String content);
+    void sendEmail(String to, String subject, String content) throws Exception;
+
+    /**
+     * 发送邮件（静默模式，失败不抛异常）
+     * 
+     * @param to 收件人邮箱
+     * @param subject 邮件主题
+     * @param content 邮件内容
+     */
+    void sendEmailSilently(String to, String subject, String content);
 
     /**
      * 发送健康证到期提醒邮件

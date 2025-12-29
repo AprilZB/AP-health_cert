@@ -45,37 +45,57 @@ public class EmailServiceImpl implements EmailService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
-     * 发送邮件
+     * 发送邮件（抛出异常模式，用于测试）
      * 使用Spring的JavaMailSender，SMTP配置从system_configs表读取
+     * 
+     * @param to 收件人邮箱
+     * @param subject 邮件主题
+     * @param content 邮件内容
+     * @throws Exception 发送失败时抛出异常
+     */
+    @Override
+    public void sendEmail(String to, String subject, String content) throws Exception {
+        // 从system_configs表读取SMTP配置
+        JavaMailSender mailSender = createMailSender();
+        if (mailSender == null) {
+            throw new RuntimeException("邮件配置不完整，无法发送邮件。请检查SMTP配置：host、port、username、password");
+        }
+
+        // 创建邮件消息
+        SimpleMailMessage message = new SimpleMailMessage();
+        String fromEmail = getConfigValue("email.from");
+        if (fromEmail == null || fromEmail.trim().isEmpty()) {
+            throw new RuntimeException("发件人邮箱未配置（email.from）");
+        }
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(content);
+
+        // 发送邮件
+        try {
+            mailSender.send(message);
+            log.info("邮件发送成功：收件人={}, 主题={}, 发件人={}", to, subject, fromEmail);
+        } catch (Exception e) {
+            log.error("邮件发送失败：收件人={}, 主题={}, 发件人={}, 错误={}", to, subject, fromEmail, e.getMessage(), e);
+            throw new RuntimeException("邮件发送失败：" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送邮件（静默模式，失败不抛异常，用于定时任务）
      * 
      * @param to 收件人邮箱
      * @param subject 邮件主题
      * @param content 邮件内容
      */
     @Override
-    public void sendEmail(String to, String subject, String content) {
+    public void sendEmailSilently(String to, String subject, String content) {
         try {
-            // 从system_configs表读取SMTP配置
-            JavaMailSender mailSender = createMailSender();
-            if (mailSender == null) {
-                log.warn("邮件配置不完整，无法发送邮件");
-                return;
-            }
-
-            // 创建邮件消息
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(getConfigValue("email.from"));
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(content);
-
-            // 发送邮件
-            mailSender.send(message);
-            log.info("邮件发送成功：收件人={}, 主题={}", to, subject);
-
+            sendEmail(to, subject, content);
         } catch (Exception e) {
             // 发送失败记录日志，不抛异常
-            log.error("邮件发送失败：收件人={}, 主题={}, 错误={}", to, subject, e.getMessage(), e);
+            log.error("邮件发送失败（静默模式）：收件人={}, 主题={}, 错误={}", to, subject, e.getMessage(), e);
         }
     }
 
@@ -111,8 +131,8 @@ public class EmailServiceImpl implements EmailService {
                 return;
             }
 
-            // 发送邮件
-            sendEmail(recipientEmail, subject, content);
+            // 发送邮件（使用静默模式，失败不抛异常）
+            sendEmailSilently(recipientEmail, subject, content);
 
         } catch (Exception e) {
             // 发送失败记录日志，不抛异常
@@ -153,8 +173,30 @@ public class EmailServiceImpl implements EmailService {
             Properties props = mailSender.getJavaMailProperties();
             props.put("mail.transport.protocol", "smtp");
             props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "false");
-            props.put("mail.debug", "false");
+            
+            // 根据端口判断是否启用TLS/SSL
+            int port = Integer.parseInt(portStr);
+            if (port == 465) {
+                // SSL端口
+                props.put("mail.smtp.ssl.enable", "true");
+                props.put("mail.smtp.ssl.trust", host);
+                props.put("mail.smtp.starttls.enable", "false");
+            } else if (port == 587 || port == 25) {
+                // TLS端口
+                props.put("mail.smtp.starttls.enable", "true");
+                props.put("mail.smtp.starttls.required", "true");
+                props.put("mail.smtp.ssl.enable", "false");
+            } else {
+                // 其他端口，默认不启用TLS/SSL
+                props.put("mail.smtp.starttls.enable", "false");
+                props.put("mail.smtp.ssl.enable", "false");
+            }
+            
+            // 启用调试模式（用于排查问题）
+            props.put("mail.debug", "true");
+            
+            log.info("创建邮件发送器：host={}, port={}, username={}, from={}", 
+                    host, port, username, getConfigValue("email.from"));
 
             return mailSender;
 
