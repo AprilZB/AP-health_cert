@@ -32,10 +32,42 @@
             font-weight: 600;
         }
 
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
         .header .user-info {
             font-size: 14px;
             margin-top: 5px;
             opacity: 0.9;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* 当前健康证状态卡片 */
@@ -250,6 +282,52 @@
             text-align: center;
         }
 
+        /* Token过期提示 */
+        .token-expired-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid #ffc107;
+        }
+
+        .token-expired-message .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .action-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .action-btn.secondary:hover {
+            background: #5a6268;
+        }
+
         /* 响应式设计 - 移动端适配 */
         @media (max-width: 480px) {
             .header h1 {
@@ -275,8 +353,13 @@
 <body>
     <!-- 顶部导航栏 -->
     <div class="header">
-        <h1>我的健康证</h1>
-        <div class="user-info" id="userInfo">加载中...</div>
+        <div class="header-content">
+            <h1>我的健康证</h1>
+            <div class="user-info" id="userInfo">加载中...</div>
+        </div>
+        <div class="header-actions">
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
     </div>
 
     <!-- 当前健康证状态 -->
@@ -302,6 +385,15 @@
 
     <!-- 错误提示 -->
     <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- Token过期提示 -->
+    <div class="token-expired-message" id="tokenExpiredMessage" style="display: none;">
+        <div>Token已过期，请重新登录</div>
+        <div class="action-buttons">
+            <button class="action-btn primary" onclick="goToLogin()">重新登录</button>
+            <button class="action-btn secondary" onclick="logout()">退出登录</button>
+        </div>
+    </div>
 
     <!-- 底部操作按钮 -->
     <div class="action-section">
@@ -341,6 +433,54 @@
                 return false;
             }
             return true;
+        }
+
+        /**
+         * 退出登录
+         */
+        function logout() {
+            // 清除本地存储的登录信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            
+            // 跳转到登录页
+            window.location.href = 'login.html';
+        }
+
+        /**
+         * 跳转到登录页
+         */
+        function goToLogin() {
+            // 清除本地存储的登录信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            
+            // 跳转到登录页
+            window.location.href = 'login.html';
+        }
+
+        /**
+         * 检查Token是否过期
+         */
+        function checkTokenExpired(response, result) {
+            // 检查HTTP状态码401或业务状态码401
+            if (response.status === 401 || (result && result.code === 401)) {
+                // Token过期，显示提示
+                const tokenExpiredEl = document.getElementById('tokenExpiredMessage');
+                tokenExpiredEl.style.display = 'block';
+                
+                // 隐藏其他内容
+                document.getElementById('statusCard').style.display = 'none';
+                document.getElementById('historyList').parentElement.style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'none';
+                
+                return true;
+            }
+            return false;
         }
 
         /**
@@ -402,6 +542,11 @@
 
                 const result = await response.json();
 
+                // 检查Token是否过期
+                if (checkTokenExpired(response, result)) {
+                    return;
+                }
+
                 if (response.ok && result.code === 200) {
                     const certificates = result.data || [];
                     
@@ -451,12 +596,17 @@
                 }
             } catch (error) {
                 console.error('加载当前状态失败:', error);
-                showError('网络错误，请稍后重试');
-                statusContent.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-text">加载失败</div>
-                    </div>
-                `;
+                // 如果是401错误，可能是Token过期
+                if (error.message && error.message.includes('401')) {
+                    checkTokenExpired({ status: 401 }, { code: 401 });
+                } else {
+                    showError('网络错误，请稍后重试');
+                    statusContent.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-text">加载失败</div>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -476,6 +626,11 @@
                 });
 
                 const result = await response.json();
+
+                // 检查Token是否过期
+                if (checkTokenExpired(response, result)) {
+                    return;
+                }
 
                 if (response.ok && result.code === 200) {
                     const certificates = result.data || [];
@@ -516,12 +671,17 @@
                 }
             } catch (error) {
                 console.error('加载历史记录失败:', error);
-                showError('网络错误，请稍后重试');
-                historyList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-text">加载失败</div>
-                    </div>
-                `;
+                // 如果是401错误，可能是Token过期
+                if (error.message && error.message.includes('401')) {
+                    checkTokenExpired({ status: 401 }, { code: 401 });
+                } else {
+                    showError('网络错误，请稍后重试');
+                    historyList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-text">加载失败</div>
+                        </div>
+                    `;
+                }
             }
         }
 
