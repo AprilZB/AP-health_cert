@@ -328,7 +328,255 @@
             background: #5a6268;
         }
 
+        /* 详情模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .modal-info-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-image-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .modal-image-container {
+            width: 100%;
+            max-width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f9f9f9;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-image-container:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .modal-image-container:hover .fullscreen-hint {
+            opacity: 1;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .fullscreen-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .modal-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .modal-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-info-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .modal-info-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .modal-actions {
+            padding: 20px;
+            border-top: 1px solid #f0f0e0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-btn.close {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-btn.close:hover {
+            background: #e0e0e0;
+        }
+
+        /* 全屏图片预览 */
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-image {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         /* 响应式设计 - 移动端适配 */
+        @media (max-width: 768px) {
+            .modal-body-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 480px) {
             .header h1 {
                 font-size: 18px;
@@ -346,6 +594,10 @@
 
             .cert-info-item {
                 font-size: 13px;
+            }
+
+            .modal-content {
+                width: 95%;
             }
         }
     </style>
@@ -393,6 +645,28 @@
             <button class="action-btn primary" onclick="goToLogin()">重新登录</button>
             <button class="action-btn secondary" onclick="logout()">退出登录</button>
         </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>健康证详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- 动态填充内容 -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn close" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全屏图片预览 -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
+        <button class="fullscreen-close" onclick="closeFullscreen()">×</button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="健康证图片" onclick="event.stopPropagation()">
     </div>
 
     <!-- 底部操作按钮 -->
@@ -648,7 +922,7 @@
                             const status = cert.status || 'draft';
                             const submitTime = cert.submitTime ? new Date(cert.submitTime).toLocaleString('zh-CN') : '-';
                             return `
-                                <div class="history-item">
+                                <div class="history-item" onclick="viewCertDetail(${cert.id})">
                                     <div class="history-item-header">
                                         <span class="history-item-title">${cert.certNumber || '未编号'}</span>
                                         <span class="status-badge ${getStatusClass(status)}">${getStatusText(status)}</span>
@@ -691,6 +965,193 @@
         function goToUpload() {
             window.location.href = 'upload-certificate.html';
         }
+
+        /**
+         * 查看健康证详情
+         * 
+         * @param certId 健康证ID
+         */
+        async function viewCertDetail(certId) {
+            try {
+                const modal = document.getElementById('detailModal');
+                const modalBody = document.getElementById('detailModalBody');
+                
+                // 显示模态框和加载状态
+                modal.classList.add('show');
+                modalBody.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 10px;">加载中...</p>
+                    </div>
+                `;
+
+                // 调用API获取健康证详情
+                const response = await fetch(API_BASE_URL + '/health-cert/' + certId, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                // 检查Token是否过期
+                if (checkTokenExpired(response, result)) {
+                    modal.classList.remove('show');
+                    return;
+                }
+
+                if (response.ok && result.code === 200) {
+                    const cert = result.data;
+                    
+                    // 构建图片URL
+                    let imageUrl = '';
+                    if (cert.imagePath) {
+                        if (cert.imagePath.startsWith('http')) {
+                            imageUrl = cert.imagePath;
+                        } else if (cert.imagePath.startsWith('/')) {
+                            imageUrl = cert.imagePath;
+                        } else {
+                            const normalizedPath = cert.imagePath.replace(/\\/g, '/');
+                            imageUrl = '/uploads/' + normalizedPath;
+                        }
+                    }
+
+                    // 格式化日期时间
+                    const formatDateTime = (dateString) => {
+                        if (!dateString) return '-';
+                        const date = new Date(dateString);
+                        return date.toLocaleString('zh-CN');
+                    };
+
+                    // 显示详情内容
+                    modalBody.innerHTML = `
+                        <div class="modal-body-layout">
+                            <!-- 左侧：健康证信息 -->
+                            <div class="modal-info-section">
+                                <div class="modal-info">
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">健康证编号</div>
+                                        <div class="modal-info-value">${cert.certNumber || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">员工姓名</div>
+                                        <div class="modal-info-value">${cert.employeeName || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">性别</div>
+                                        <div class="modal-info-value">${cert.gender || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">年龄</div>
+                                        <div class="modal-info-value">${cert.age || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">身份证号</div>
+                                        <div class="modal-info-value">${cert.idCard || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">健康证类别</div>
+                                        <div class="modal-info-value">${cert.category || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">发证日期</div>
+                                        <div class="modal-info-value">${formatDate(cert.issueDate)}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">有效期至</div>
+                                        <div class="modal-info-value">${formatDate(cert.expiryDate)}</div>
+                                    </div>
+                                    <div class="modal-info-item" style="grid-column: 1 / -1;">
+                                        <div class="modal-info-label">发证机构</div>
+                                        <div class="modal-info-value">${cert.issuingAuthority || '-'}</div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">状态</div>
+                                        <div class="modal-info-value">
+                                            <span class="status-badge ${getStatusClass(cert.status)}">${getStatusText(cert.status)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="modal-info-item">
+                                        <div class="modal-info-label">提交时间</div>
+                                        <div class="modal-info-value">${cert.submitTime ? formatDateTime(cert.submitTime) : '-'}</div>
+                                    </div>
+                                    ${cert.rejectReason ? `
+                                    <div class="modal-info-item" style="grid-column: 1 / -1;">
+                                        <div class="modal-info-label">拒绝原因</div>
+                                        <div class="modal-info-value" style="color: #e74c3c;">${cert.rejectReason}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <!-- 右侧：健康证图片预览 -->
+                            <div class="modal-image-section">
+                                ${imageUrl ? `
+                                    <div class="modal-image-container" onclick="openFullscreen('${imageUrl}')">
+                                        <img class="modal-image" src="${imageUrl}" alt="健康证图片" onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>图片加载失败</div>'">
+                                        <div class="fullscreen-hint">点击图片全屏预览</div>
+                                    </div>
+                                ` : `
+                                    <div class="image-placeholder">暂无图片</div>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    showError(result.message || '加载失败');
+                    modalBody.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-text">加载失败：${result.message || '未知错误'}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('查看详情失败:', error);
+                showError('网络错误，请稍后重试');
+                const modalBody = document.getElementById('detailModalBody');
+                modalBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-text">加载失败：${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 关闭详情模态框
+         */
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            modal.classList.remove('show');
+        }
+
+        /**
+         * 打开全屏图片预览
+         * 
+         * @param imageUrl 图片URL
+         */
+        function openFullscreen(imageUrl) {
+            const overlay = document.getElementById('fullscreenOverlay');
+            const img = document.getElementById('fullscreenImage');
+            img.src = imageUrl;
+            overlay.classList.add('show');
+        }
+
+        /**
+         * 关闭全屏图片预览
+         */
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.remove('show');
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
 
         /**
          * 页面初始化

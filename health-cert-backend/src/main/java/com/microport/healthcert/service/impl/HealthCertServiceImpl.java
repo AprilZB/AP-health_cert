@@ -175,6 +175,27 @@ public class HealthCertServiceImpl implements HealthCertService {
     }
 
     /**
+     * 根据ID查询健康证详情（员工端）
+     * 只能查询自己的健康证
+     * 
+     * @param certId 健康证ID
+     * @param userId 用户ID（用于验证权限）
+     * @return 健康证详情
+     */
+    @Override
+    public HealthCertificate getMyHealthCertById(Long certId, Long userId) {
+        HealthCertificate cert = healthCertificateMapper.selectById(certId);
+        if (cert == null) {
+            throw new IllegalArgumentException("健康证不存在");
+        }
+        // 验证是否属于当前用户
+        if (!cert.getEmployeeId().equals(userId)) {
+            throw new IllegalArgumentException("无权访问该健康证");
+        }
+        return cert;
+    }
+
+    /**
      * 验证必填字段
      */
     private void validateRequiredFields(HealthCertDTO dto) {

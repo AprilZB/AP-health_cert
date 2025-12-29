@@ -38,5 +38,15 @@ public interface HealthCertService {
      * @return 健康证列表
      */
     List<HealthCertificate> getMyHealthCertList(Long userId);
+
+    /**
+     * 根据ID查询健康证详情（员工端）
+     * 只能查询自己的健康证
+     * 
+     * @param certId 健康证ID
+     * @param userId 用户ID（用于验证权限）
+     * @return 健康证详情
+     */
+    HealthCertificate getMyHealthCertById(Long certId, Long userId);
 }
 

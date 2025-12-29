@@ -94,5 +94,32 @@ public class HealthCertController {
             return Result.error(500, "查询失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 查看健康证详情（员工端）
+     * 只能查看自己的健康证
+     * 
+     * @param id 健康证ID
+     * @param request HTTP请求对象（用于获取用户信息）
+     * @return 健康证详情
+     */
+    @GetMapping("/{id}")
+    public Result<HealthCertificate> getDetail(@PathVariable("id") Long id, HttpServletRequest request) {
+        try {
+            // 从request attribute获取用户信息（由JWT拦截器设置）
+            Long userId = (Long) request.getAttribute("userId");
+
+            if (userId == null) {
+                return Result.error(401, "未登录");
+            }
+
+            HealthCertificate cert = healthCertService.getMyHealthCertById(id, userId);
+            return Result.success(cert);
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
+        } catch (Exception e) {
+            return Result.error(500, "查询失败：" + e.getMessage());
+        }
+    }
 }
 
