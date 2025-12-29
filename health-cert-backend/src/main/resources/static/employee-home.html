@@ -986,7 +986,7 @@
                 `;
 
                 // 调用API获取健康证详情
-                const response = await fetch(API_BASE_URL + '/health-cert/' + certId, {
+                const response = await fetch(API_BASE_URL + '/health-cert/detail/' + certId, {
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + getToken(),

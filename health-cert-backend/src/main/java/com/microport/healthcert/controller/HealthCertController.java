@@ -103,7 +103,7 @@ public class HealthCertController {
      * @param request HTTP请求对象（用于获取用户信息）
      * @return 健康证详情
      */
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
     public Result<HealthCertificate> getDetail(@PathVariable("id") Long id, HttpServletRequest request) {
         try {
             // 从request attribute获取用户信息（由JWT拦截器设置）
